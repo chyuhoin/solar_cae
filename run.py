@@ -27,7 +27,7 @@ from dateutil.parser import parse
 from dataclasses import asdict
 from config import parse_args
 from utils.seed import set_seed, get_device
-from dataset.solar_patch import HyperspecSolarPatchDataset, train_val_split
+from datasets.solar_patch import HyperspecSolarPatchDataset, train_val_split
 from model.cae import ChannelCAE
 from loss.loss import create_channel_weights
 from train.train_loop import run_epoch
