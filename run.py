@@ -69,9 +69,9 @@ def main():
                 hdu_date = parse(base.split("RSM")[1][:8]).strftime("%Y_%m%d")
                 hdu_time = base.split("T")[1][:6]
                 dtime = hdu_date+'_'+hdu_time
-                out_path = os.path.join(cfg.encode_out, f"{dtime}.npz")
+                out_path = os.path.join(cfg.encode_out, f"{dtime}.npy")
                 import numpy as np
-                np.savez_compressed(out_path, data=z)
+                np.save(out_path, data=z)
         print("Encoding complete.")
         return
     train_files, val_files = train_val_split(file_list, cfg.val_frac, cfg.seed)
