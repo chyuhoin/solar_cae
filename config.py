@@ -5,7 +5,7 @@ import argparse
 from dataclasses import dataclass
 from typing import Optional
 
-dataclass
+@dataclass
 class TrainConfig:
     data_root: str
     fits_glob: str = "*.fits"
