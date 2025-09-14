@@ -60,6 +60,7 @@ def main():
         os.makedirs(cfg.encode_out, exist_ok=True)
         import torch
         with torch.no_grad():
+            now = 0
             for fp in file_list:
                 rdr = FITSArrayReader(fp)
                 arr = rdr.read_full(); rdr.close()
@@ -72,6 +73,8 @@ def main():
                 out_path = os.path.join(cfg.encode_out, f"{dtime}.npy")
                 import numpy as np
                 np.save(out_path, z)
+                print(f"\r 已完成 {now+1}/{len(file_list)}: {out_path}", end='', flush=True)
+                now += 1
         print("Encoding complete.")
         return
     train_files, val_files = train_val_split(file_list, cfg.val_frac, cfg.seed)
