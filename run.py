@@ -124,6 +124,10 @@ def main():
     history = []
     patience = 10
     no_improve = 0
+
+    with open(os.path.join(cfg.save_dir, 'log.csv'), 'w') as f:
+        f.write("epoch,train_loss,train_l1,train_l2,train_ssim,val_loss,val_l1,val_l2,val_ssim\n")
+    
     for epoch in range(start_epoch, cfg.epochs):
         print(f"\nEpoch {epoch+1}/{cfg.epochs}")
 
@@ -159,6 +163,10 @@ def main():
                          'config': asdict(cfg),
                          'history': history},
                         os.path.join(cfg.save_dir, 'last.pt'))
+        
+        with open(os.path.join(cfg.save_dir, 'log.csv'), 'a') as f:
+            f.write(f"{epoch},{tr['loss']},{tr['l1']},{tr['l2']},{tr['ssim']},{vl['loss']},{vl['l1']},{vl['l2']},{vl['ssim']}\n")
+            
         if vl['loss'] < best_val:
             best_val = vl['loss']
             no_improve = 0
