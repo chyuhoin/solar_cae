@@ -76,7 +76,7 @@ def main():
         return
     train_files, val_files = train_val_split(file_list, cfg.val_frac, cfg.seed)
     print(f"Train files: {len(train_files)} | Val files: {len(val_files)}")
-    CACHE_SIZE = 100
+    CACHE_SIZE = 50 # 不通过命令行参数设置，请一定一定根据内存实际情况微调！！！！！！
     train_ds = HyperspecSolarPatchDataset(train_files,
                                           patch_size=cfg.patch_size,
                                           stride=cfg.stride,
@@ -97,9 +97,9 @@ def main():
                                         augment=False)
     print(f"Train patches: {len(train_ds)} | Val patches: {len(val_ds)}")
     from torch.utils.data import DataLoader
-    train_loader = DataLoader(train_ds, batch_size=cfg.batch_size, shuffle=True,persistent_workers=True,
+    train_loader = DataLoader(train_ds, batch_size=cfg.batch_size, shuffle=True,
                               num_workers=cfg.num_workers, pin_memory=True, drop_last=True)
-    val_loader = DataLoader(val_ds, batch_size=cfg.batch_size, shuffle=False,persistent_workers=True,
+    val_loader = DataLoader(val_ds, batch_size=cfg.batch_size, shuffle=False,
                             num_workers=cfg.num_workers, pin_memory=True, drop_last=False)
     in_ch = train_ds.C
     print(f"Detected input channels: {in_ch}")
@@ -127,9 +127,9 @@ def main():
     for epoch in range(start_epoch, cfg.epochs):
         print(f"\nEpoch {epoch+1}/{cfg.epochs}")
 
-        # 刷新 train/val 的热缓存
-        train_ds.refresh_cache()
-        val_ds.refresh_cache()
+        # 刷新 train/val 的热缓存，如果Dataset那边不刷新，那就在这边要刷新
+        # train_ds.refresh_cache()
+        # val_ds.refresh_cache()
 
         # 每个 epoch 重新构造 DataLoader，确保热缓存生效
         from torch.utils.data import DataLoader
