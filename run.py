@@ -71,7 +71,7 @@ def main():
                 dtime = hdu_date+'_'+hdu_time
                 out_path = os.path.join(cfg.encode_out, f"{dtime}.npy")
                 import numpy as np
-                np.save(out_path, data=z)
+                np.save(out_path, z)
         print("Encoding complete.")
         return
     train_files, val_files = train_val_split(file_list, cfg.val_frac, cfg.seed)
