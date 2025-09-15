@@ -72,6 +72,7 @@ def main():
                 dtime = hdu_date+'_'+hdu_time
                 out_path = os.path.join(cfg.encode_out, f"{dtime}.npy")
                 import numpy as np
+                z = z.transpose(1, 2, 0)  # 从 (C, H, W) 转换为 (H, W, C)
                 np.save(out_path, z)
                 print(f"\r 已完成 {now+1}/{len(file_list)}: {out_path}", end='', flush=True)
                 now += 1
