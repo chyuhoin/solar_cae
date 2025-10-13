@@ -73,6 +73,19 @@ def main():
                 out_path = os.path.join(cfg.encode_out, f"{dtime}.npy")
                 import numpy as np
                 z = z.transpose(1, 2, 0)  # 从 (C, H, W) 转换为 (H, W, C)
+                if cfg.encode_norm in ['global','channel']:
+                    if cfg.encode_norm == 'global':
+                        z_min, z_max = z.min(), z.max()
+                        if z_max > z_min:
+                            z = (z - z_min) / (z_max - z_min)
+                        else:
+                            z = z - z_min
+                    else:
+                        z_min = z.min(axis=(0,1), keepdims=True)
+                        z_max = z.max(axis=(0,1), keepdims=True)
+                        diff = z_max - z_min
+                        diff[diff==0] = 1
+                        z = (z - z_min) / diff
                 np.save(out_path, z)
                 print(f"\r 已完成 {now+1}/{len(file_list)}: {out_path}", end='', flush=True)
                 now += 1
