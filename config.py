@@ -34,6 +34,7 @@ class TrainConfig:
     checkpoint: Optional[str] = None
     encode_only: bool = False
     encode_out: str = "encoded"
+    encode_norm: str = 'channel'
     norm: str = 'none'
 
 def parse_args() -> TrainConfig:
@@ -70,7 +71,7 @@ def parse_args() -> TrainConfig:
     p.add_argument('--checkpoint', type=str, default=None, help='推理/恢复用模型路径')
     p.add_argument('--encode-only', action='store_true', help='仅编码，不训练')
     p.add_argument('--encode-out', type=str, default='encoded', help='编码输出目录')
-    p.add_argument('--encode-norm', type=str, default='channel', help='编码时归一化方式：全局/通道/无')
+    p.add_argument('--encode-norm', type=str, default='channel', choices=['none','global','channel'], help='编码时归一化方式：全局/通道/无')
     p.add_argument('--norm', type=str, default='none', choices=['none','minmax','zscore','perpatch'])
     args = p.parse_args()
     cfg = TrainConfig(**vars(args))
