@@ -1,26 +1,21 @@
-"""
-整图编码工具，将高光谱图像降维为latent通道。
-"""
 import numpy as np
+import torch
 from utils.patch import compute_patch_grid
 from utils.seed import get_device
 
-def encode_full_image(model, arr: np.ndarray, patch: int=256, stride: int=None, device=None, batch_size: int=4, use_window: bool=True, verbose: bool=True) -> np.ndarray:
+def encode_full_image(model, arr: np.ndarray, patch: int=256, stride: int=None, device=None, batch_size: int=4, use_window: bool=True, verbose: bool=False) -> np.ndarray:
     """
     编码整幅高光谱图像为降维后的latent通道。
     使用重叠窗口和Hanning窗函数实现平滑拼接。
     """
-    import torch
     model.eval()
     if device is None:
         device = get_device()
     
-    # 默认步长设为块大小的一半，确保充分重叠
     stride = stride if stride is not None else patch // 2
     C, H, W = arr.shape
     coords = compute_patch_grid(H, W, patch, stride, drop_last=False)
     
-    # 创建Hanning窗函数用于平滑重叠区域
     window = None
     if use_window:
         window_1d = np.hanning(patch)
@@ -41,15 +36,12 @@ def encode_full_image(model, arr: np.ndarray, patch: int=256, stride: int=None, 
         locs = []
         
         for (y, x) in coords:
-            # 确保不越界
             end_y = min(y + patch, H)
             end_x = min(x + patch, W)
             actual_h = end_y - y
             actual_w = end_x - x
             
-            # 处理边缘情况
             if actual_h < patch or actual_w < patch:
-                # 创建填充块
                 temp_patch = np.zeros((C, patch, patch), dtype=np.float32)
                 temp_patch[:, :actual_h, :actual_w] = arr[:, y:end_y, x:end_x]
                 patch_np = temp_patch
@@ -68,27 +60,19 @@ def encode_full_image(model, arr: np.ndarray, patch: int=256, stride: int=None, 
                 for i, (yy, xx, act_h, act_w) in enumerate(locs):
                     ps = z_np[i]
                     
-                    # 应用窗函数
                     if use_window and window is not None:
-                        # 调整窗口大小以匹配编码后的块大小
                         win = torch.nn.functional.interpolate(
                             window.unsqueeze(0).unsqueeze(0), 
                             size=(ps.shape[1], ps.shape[2]), 
                             mode='bilinear'
                         ).squeeze().cpu().numpy()
-                        
-                        # 应用窗口权重
                         ps = ps * win[None, :, :]
                     
                     h_slice = slice(yy, yy + min(ps.shape[1], act_h))
                     w_slice = slice(xx, xx + min(ps.shape[2], act_w))
                     
                     out_arr[:, h_slice, w_slice] += ps[:, :act_h, :act_w]
-                    
-                    if use_window:
-                        counts[h_slice, w_slice] += win[:act_h, :act_w]
-                    else:
-                        counts[h_slice, w_slice] += 1
+                    counts[h_slice, w_slice] += win[:act_h, :act_w] if use_window else 1
                 
                 batches = []
                 locs = []
@@ -102,33 +86,24 @@ def encode_full_image(model, arr: np.ndarray, patch: int=256, stride: int=None, 
             for i, (yy, xx, act_h, act_w) in enumerate(locs):
                 ps = z_np[i]
                 
-                # 应用窗函数
                 if use_window and window is not None:
-                    # 调整窗口大小以匹配编码后的块大小
                     win = torch.nn.functional.interpolate(
                         window.unsqueeze(0).unsqueeze(0), 
                         size=(ps.shape[1], ps.shape[2]), 
                         mode='bilinear'
                     ).squeeze().cpu().numpy()
-                    
-                    # 应用窗口权重
                     ps = ps * win[None, :, :]
                 
                 h_slice = slice(yy, yy + min(ps.shape[1], act_h))
                 w_slice = slice(xx, xx + min(ps.shape[2], act_w))
                 
                 out_arr[:, h_slice, w_slice] += ps[:, :act_h, :act_w]
-                
-                if use_window:
-                    counts[h_slice, w_slice] += win[:act_h, :act_w]
-                else:
-                    counts[h_slice, w_slice] += 1
+                counts[h_slice, w_slice] += win[:act_h, :act_w] if use_window else 1
     
-    # 防止除零
     counts = np.maximum(counts, 1e-6)
     
-    # 归一化
+    # 归一化，避免除零
     for c in range(latent_ch):
         out_arr[c] /= counts
     
-    return np.flip(out_arr, axis=1)
+    return out_arr
