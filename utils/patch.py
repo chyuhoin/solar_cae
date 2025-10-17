@@ -17,30 +17,35 @@ def compute_patch_grid(h: int, w: int, patch: int, stride: Optional[int] = None,
     """
     if stride is None:
         stride = patch
+
+    def _generate_starts(dimension: int, patch_size: int, step: int, drop: bool) -> List[int]:
+        """
+        生成一个维度上的所有起始坐标。
+        """
+        starts = []
+        current_start = 0
+        
+        # 所有能完整容纳的patch
+        while current_start + patch_size <= dimension:
+            starts.append(current_start)
+            current_start += step
+        
+        if not drop:
+            boundary_start = max(0, dimension - patch_size)
+            
+            if not starts or starts[-1] < boundary_start:
+                starts.append(boundary_start)
+                
+        
+        return starts
+
+    y_starts = _generate_starts(h, patch, stride, drop_last)
+    x_starts = _generate_starts(w, patch, stride, drop_last)
+
     coords = []
-    y = 0
-    while True:
-        x = 0
-        y_end = y + patch
-        if y_end > h:
-            if drop_last:
-                break
-            y = h - patch
-            y_end = h
-        while True:
-            x_end = x + patch
-            if x_end > w:
-                if drop_last:
-                    break
-                x = w - patch
-                x_end = w
+    for y in y_starts:
+        for x in x_starts:
             coords.append((y, x))
-            if x + stride >= w:
-                break
-            x += stride
-        if y + stride >= h:
-            break
-        y += stride
-    # 去重
-    coords = list(dict.fromkeys(coords))
+            
     return coords
+
