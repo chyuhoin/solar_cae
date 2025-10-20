@@ -106,4 +106,4 @@ def encode_full_image(model, arr: np.ndarray, patch: int=256, stride: int=None, 
     for c in range(latent_ch):
         out_arr[c] /= counts
     
-    return out_arr
+    return np.flip(out_arr, axis=1)
