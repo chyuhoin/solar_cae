@@ -145,6 +145,7 @@ def main():
     patience = 10
     no_improve = 0
 
+    os.makedirs(cfg.save_dir, exist_ok=True)
     with open(os.path.join(cfg.save_dir, 'log.csv'), 'w') as f:
         f.write("epoch,time,train_loss,train_l1,train_l2,train_ssim,val_loss,val_l1,val_l2,val_ssim\n")
     
