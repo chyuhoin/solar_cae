@@ -36,6 +36,7 @@ class TrainConfig:
     encode_out: str = "encoded"
     encode_norm: str = 'channel'
     norm: str = 'none'
+    max_time: Optional[str] = '2024-07-14'
 
 def parse_args() -> TrainConfig:
     """
@@ -73,6 +74,7 @@ def parse_args() -> TrainConfig:
     p.add_argument('--encode-out', type=str, default='encoded', help='编码输出目录')
     p.add_argument('--encode-norm', type=str, default='channel', choices=['none','global','channel'], help='编码时归一化方式：全局/通道/无')
     p.add_argument('--norm', type=str, default='none', choices=['none','minmax','zscore','perpatch'])
+    p.add_argument('--max-time', type=str, default='2024-07-14', help='仅使用该时间之前的数据，格式YYYY-MM-DD')
     args = p.parse_args()
     cfg = TrainConfig(**vars(args))
     return cfg

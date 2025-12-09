@@ -44,6 +44,8 @@ def main():
     print(f"Device: {device}")
     pattern = os.path.join(cfg.data_root, cfg.fits_glob)
     file_list = sorted(glob.glob(pattern))
+    if cfg.max_time is not None:
+        file_list = [x for x in file_list if parse(x.split("RSM")[1][:8]) < parse(cfg.max_time)]
     if len(file_list) == 0:
         raise SystemExit(f"No files matched {pattern}")
     print(f"Found {len(file_list)} files")
